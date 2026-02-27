@@ -240,7 +240,10 @@ class Tpm2(object):
             cmd.extend(['-G', alg])
 
         if policy != None:
-            cmd.extend(['-L', policy])
+            polfd, polpath = mkstemp(prefix='', suffix='.policy', dir=self._tmp)
+            with os.fdopen(polfd, 'wb') as f:
+                f.write(bytes(policy))
+            cmd.extend(['-L', polpath])
 
         p = Popen(cmd, stdout=PIPE, stderr=PIPE, stdin=PIPE, env=os.environ)
         stdout, stderr = p.communicate(input=str2bytes(seal))
@@ -368,7 +371,10 @@ class Tpm2(object):
             cmd.extend(['--passin', passin])
 
         if policy != None:
-            cmd.extend(['-L', policy])
+            polfd, polpath = mkstemp(prefix='', suffix='.policy', dir=self._tmp)
+            with os.fdopen(polfd, 'wb') as f:
+                f.write(bytes(policy))
+            cmd.extend(['-L', polpath])
 
         p = Popen(cmd, stdout=PIPE, stderr=PIPE, stdin=PIPE, env=os.environ)
         stdout, stderr = p.communicate(input=seal)

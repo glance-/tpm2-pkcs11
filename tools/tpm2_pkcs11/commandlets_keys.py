@@ -11,6 +11,9 @@ from tempfile import mkstemp
 
 from tpm2_pytss.tsskey import TSSPrivKey
 
+from tpm2_pytss.constants import TPM2_ALG
+from tpm2_pytss.policy import policy as TPM2_policy
+
 # local imports
 from .command import Command
 from .command import commandlet
@@ -30,7 +33,6 @@ from .utils import dump_tsspem
 from .utils import dump_pubpem
 from .utils import get_serialized_tr
 from .utils import validate_policy
-from .utils import calculate_policy_digest
 
 from .tpm2 import Tpm2
 
@@ -268,7 +270,9 @@ class ImportCommand(NewKeyCommandBase):
 
         policy_digest = None
         if policy is not None:
-            policy_digest = calculate_policy_digest(policy, tpm2.tmpdir)
+            policy_object = TPM2_policy(policy, TPM2_ALG.SHA256)
+            policy_object.calculate()
+            policy_digest = policy_object.get_calculated_digest()
             if objattrs is None:
                 # Default attributes for tpm2_import usually include userwithauth
                 objattrs = "fixedtpm|fixedparent|sensitivedataorigin|decrypt|sign"
@@ -315,7 +319,9 @@ class AddKeyCommand(NewKeyCommandBase):
         objattrs = None
         policy_digest = None
         if policy is not None:
-            policy_digest = calculate_policy_digest(policy, tpm2.tmpdir)
+            policy_object = TPM2_policy(policy, TPM2_ALG.SHA256)
+            policy_object.calculate()
+            policy_digest = policy_object.get_calculated_digest()
             # Default attributes for tpm2_create usually include userwithauth
             # We must explicitly set them WITHOUT userwithauth
             objattrs = "fixedtpm|fixedparent|sensitivedataorigin|noda|decrypt|sign"
